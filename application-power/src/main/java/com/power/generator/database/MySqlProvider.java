@@ -34,29 +34,7 @@ public class MySqlProvider implements DbProvider {
             connection = DbUtil.getConnection();
             DatabaseMetaData meta = DbUtil.getDatabaseMetaData(connection);
             ResultSet colRet = meta.getColumns(connection.getCatalog(), "%", tableName, "%");
-            while (colRet.next()) {
-                String columnName = colRet.getString("COLUMN_NAME");
-                String isAutoIncrement = colRet.getString("IS_AUTOINCREMENT");
-                int digits = colRet.getInt("DECIMAL_DIGITS");
-                int dataType = colRet.getInt("DATA_TYPE");
-                String remarks = colRet.getString("REMARKS");
-                String columnType = TypeConvert.sqlTypeToJavaType(dataType, digits);
-                //设置列信息
-                Column column = new Column();
-                column.setColumnName(columnName);
-                column.setColumnType(columnType);
-                column.setRemarks(remarks);
-                if ("YES".equals(isAutoIncrement)) {
-                    tableInfo.setPrimaryKeyIsAutoIncrement(true);
-                    column.setAutoIncrement(true);
-                }
-                if (columnName.equals(primaryKey)) {
-                    tableInfo.setPrimaryKey(columnName);
-                    tableInfo.setPrimaryKeyType(columnType);
-                    column.setPrimaryKey(true);
-                }
-                colMap.put(columnName, column);
-            }
+            extracted(primaryKey, tableInfo, colMap, colRet);
             tableInfo.setColumnsInfo(colMap);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -65,6 +43,33 @@ public class MySqlProvider implements DbProvider {
         }
         return tableInfo;
     }
+
+	private void extracted(String primaryKey, TableInfo tableInfo, Map<String, Column> colMap, ResultSet colRet)
+			throws SQLException {
+		while (colRet.next()) {
+		    String columnName = colRet.getString("COLUMN_NAME");
+		    String isAutoIncrement = colRet.getString("IS_AUTOINCREMENT");
+		    int digits = colRet.getInt("DECIMAL_DIGITS");
+		    int dataType = colRet.getInt("DATA_TYPE");
+		    String remarks = colRet.getString("REMARKS");
+		    String columnType = TypeConvert.sqlTypeToJavaType(dataType, digits);
+		    //设置列信息
+		    Column column = new Column();
+		    column.setColumnName(columnName);
+		    column.setColumnType(columnType);
+		    column.setRemarks(remarks);
+		    if ("YES".equals(isAutoIncrement)) {
+		        tableInfo.setPrimaryKeyIsAutoIncrement(true);
+		        column.setAutoIncrement(true);
+		    }
+		    if (columnName.equals(primaryKey)) {
+		        tableInfo.setPrimaryKey(columnName);
+		        tableInfo.setPrimaryKeyType(columnType);
+		        column.setPrimaryKey(true);
+		    }
+		    colMap.put(columnName, column);
+		}
+	}
 
     /**
      * 获取主键字段
