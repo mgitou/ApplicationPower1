@@ -93,15 +93,20 @@ public class KubeYmlCodeBuilder implements ICodeBuilder {
         String k8sCanaryIngressConfigPath = paths.get(K8S_DIR) + ConstVal.FILE_SEPARATOR + lowerCaseAppName +"-canary-ingress.yaml";
         templates.put(k8sCanaryIngressConfigPath,  canaryIngress.render());
 
-        Template canaryToProdIngress = BeetlTemplateUtil.getByName(K8S_CANARY_TO_PROD_INGRESS_TPL);
+        extracted(templates, applicationName, lowerCaseAppName, handleVersion);
+
+        return templates;
+    }
+
+	private void extracted(Map<String, String> templates, String applicationName, String lowerCaseAppName,
+			String handleVersion) {
+		Template canaryToProdIngress = BeetlTemplateUtil.getByName(K8S_CANARY_TO_PROD_INGRESS_TPL);
         canaryToProdIngress.binding(GeneratorConstant.COMMON_VARIABLE);
         canaryToProdIngress.binding("handleVersion",handleVersion);
         canaryToProdIngress.binding("domain", getDomain(applicationName));
         String k8sCanaryToProdIngressConfigPath = paths.get(K8S_DIR) + ConstVal.FILE_SEPARATOR + lowerCaseAppName +"-canary-to-prod-ingress.yaml";
         templates.put(k8sCanaryToProdIngressConfigPath,  canaryToProdIngress.render());
-
-        return templates;
-    }
+	}
 
     /**
      * get domain by application name
